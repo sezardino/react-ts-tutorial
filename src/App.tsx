@@ -1,72 +1,68 @@
-import React, {Component} from 'react';
+import React, {Component, createContext} from 'react';
 
-type CounterProps = {
-	title?: string;
-};
 
-type CounterState = {
-	count: number;
-};
-
-class Counter extends Component<CounterProps, CounterState> {
-	state = {
-		count: 0,
-	};
-
-	componentDidMount(): void {}
-
-	shouldComponentUpdate(nextProps: CounterProps, nextState: CounterState): boolean {
-		return true;
-	}
-
-	static getDerivedStateFromProps(props: CounterProps, state: CounterState): null | CounterState {
-		return false ? {count: 2} : null;
-	}
-
-	clickHandler = (evt: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
-    console.log(evt);
-		this.setState(({count}) => ({count: ++count}));
-	};
-
-	render() {
-		return (
-			<div>
-				<h1>{this.state.count}</h1>
-				<button onClick={this.clickHandler}>+</button>
-				<a href="#id" onClick={this.clickHandler}>+</a>
-			</div>
-		);
-	}
+// Context creation
+interface IContext {
+  isAuth: boolean,
+  toggleAuth: () => void,
 }
 
-class Form extends Component <{}, {}> {
+const AuthContext = React.createContext<IContext>({
+  isAuth: false,
+  toggleAuth: () => {},
+});
 
-  inputHandler = (evt: React.FocusEvent) => {
-    console.log(evt.target);
-  }
+class Login extends Component {
 
-  submitHandler = (evt: React.FormEvent<HTMLFormElement>) => {
-    evt.preventDefault();
-    console.log('Submitted');
-  }
+  static contextType = AuthContext;
+  context!: React.ContextType<typeof AuthContext>
 
   render() {
+    const { toggleAuth, isAuth } = this.context;
+
     return (
-      <form onSubmit={this.submitHandler}>
-        <label>
-          <input onFocus={this.inputHandler} type="text" name="text"/>
-        </label>
-        <button type="submit">submit</button>
-      </form>
-    )
+      <button onClick={toggleAuth}>
+        {!isAuth ? 'Login' : 'Logout'}
+      </button>
+    );
   }
 }
 
-const App = () => (
-	<>
-		<Counter />
-    <Form />
-	</>
+// Inner component (old variant with Consumer)
+const Profile = () => (
+  <AuthContext.Consumer>
+    {({ isAuth }) => (
+      <h1>{!isAuth ? 'Please log in' : 'You are logged in'}</h1>
+    )}
+  </AuthContext.Consumer>
 );
+
+// Root component
+class Context extends Component<{}, {isAuth: boolean}> {
+  readonly state = {
+    isAuth: false,
+  };
+
+  toggleAuth = () => {
+    this.setState(({ isAuth }) => ({
+      isAuth: !isAuth
+    }));
+  };
+
+  render() {
+    const { isAuth } = this.state;
+    const context: IContext = { isAuth, toggleAuth: this.toggleAuth };
+
+    return (
+      <AuthContext.Provider value={context}>
+        <Login />
+        <Profile />
+      </AuthContext.Provider>
+    );
+  }
+}
+
+
+const App = () => <Context />;
 
 export default App;
