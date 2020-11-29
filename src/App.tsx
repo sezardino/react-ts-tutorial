@@ -15,6 +15,7 @@ const AuthContext = React.createContext<IContext>({
 class Login extends Component {
 
   static contextType = AuthContext;
+  context!: React.ContextType<typeof AuthContext>
 
   render() {
     const { toggleAuth, isAuth } = this.context;
