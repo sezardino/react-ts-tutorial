@@ -1,72 +1,113 @@
 import React, {Component} from 'react';
 
-type CounterProps = {
-	title?: string;
-};
-
-type CounterState = {
-	count: number;
-};
-
-class Counter extends Component<CounterProps, CounterState> {
-	state = {
-		count: 0,
-	};
-
-	componentDidMount(): void {}
-
-	shouldComponentUpdate(nextProps: CounterProps, nextState: CounterState): boolean {
-		return true;
-	}
-
-	static getDerivedStateFromProps(props: CounterProps, state: CounterState): null | CounterState {
-		return false ? {count: 2} : null;
-	}
-
-	clickHandler = (evt: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
-    console.log(evt);
-		this.setState(({count}) => ({count: ++count}));
-	};
-
-	render() {
-		return (
-			<div>
-				<h1>{this.state.count}</h1>
-				<button onClick={this.clickHandler}>+</button>
-				<a href="#id" onClick={this.clickHandler}>+</a>
-			</div>
-		);
-	}
+type Position = {
+  id: string,
+  value: string,
+  title: string,
 }
 
-class Form extends Component <{}, {}> {
+const POSITIONS: Array<Position> = [
+  {
+    id: 'fd',
+    value: 'Front-end Developer',
+    title: 'Front-end Developer',
+  },
+  {
+    id: 'bd',
+    value: 'Back-end Developer',
+    title: 'Back-end Developer',
+  }
+]
 
-  inputHandler = (evt: React.FocusEvent) => {
-    console.log(evt.target);
+type FormState = {
+  inputText: string,
+    textareaText: string,
+    selectText: string,
+    showData: {
+      name: string,
+      text: string,
+      position: string,
+    }
+}
+
+class Form extends Component <{}, FormState> {
+  state ={
+    inputText: '',
+    textareaText: '',
+    selectText: '',
+    showData: {
+      name: '',
+      text: '',
+      position: '',
+    }
   }
 
-  submitHandler = (evt: React.FormEvent<HTMLFormElement>) => {
+  handleInputChange = (evt: React.ChangeEvent<HTMLInputElement>):void => {
+    const { target: { value } } = evt
+    this.setState({
+      inputText: value,
+    })
+  }
+
+  handleTextareaChange = (evt: React.ChangeEvent<HTMLTextAreaElement>):void => {
+    const { target: { value } } = evt
+    this.setState({
+      textareaText: value,
+    })
+  }
+
+  handleSelectChange = (evt: React.ChangeEvent<HTMLSelectElement>):void => {
+    const { target: { value } } = evt
+    this.setState({
+      selectText: value,
+    })
+  }
+
+  handleShow = (evt: React.MouseEvent<HTMLButtonElement>):void => {
     evt.preventDefault();
-    console.log('Submitted');
+    const { inputText, textareaText, selectText } = this.state;
+    this.setState({
+      inputText: '',
+      textareaText: '',
+      selectText: '',
+      showData: {
+        name: inputText,
+        text: textareaText,
+        position: selectText,
+      }
+    })
   }
+
+  private selectRef = React.createRef<HTMLSelectElement>()
 
   render() {
+    const { inputText, textareaText, selectText, showData } = this.state;
+    const { name, text, position } = showData;
+
     return (
-      <form onSubmit={this.submitHandler}>
-        <label>
-          <input onFocus={this.inputHandler} type="text" name="text"/>
-        </label>
-        <button type="submit">submit</button>
-      </form>
-    )
+      <>
+        <form>
+          <label>
+            Name:
+            <input type="text" name="name" value={inputText} onChange={this.handleInputChange} />
+          </label>
+          <br />
+          <label htmlFor="text">Text:</label>
+          <textarea id="text" value={textareaText} onChange={this.handleTextareaChange} />
+          <select ref={this.selectRef} value={selectText} onChange={this.handleSelectChange}>
+            {POSITIONS.map(({ id, value, title }) => (
+              <option key={id} value={value}>{title}</option>
+            ))}
+          </select>
+        <br />
+        <button onClick={this.handleShow}>Show</button>
+        </form>
+        <h2>{name}</h2>
+        <h3>{text}</h3>
+        <h3>{position}</h3>
+      </>
+    );
   }
 }
 
-const App = () => (
-	<>
-		<Counter />
-    <Form />
-	</>
-);
-
-export default App;
+export default Form;
