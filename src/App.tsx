@@ -1,54 +1,67 @@
+import React, {Component, createContext} from 'react';
 
-import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 
-type PortalProps = {
-  children: React.ReactNode
-}
-class MyPortal extends Component {
-
-  private el = document.createElement('div');
-
-  public componentDidMount(): void {
-    document.body.appendChild(this.el);
-  }
-
-  public componentWillUnmount(): void {
-    document.body.removeChild(this.el);
-  }
-
-  public render(): React.ReactElement<PortalProps> {
-    return ReactDOM.createPortal(this.props.children, this.el);
-  }
+// Context creation
+interface IContext {
+  isAuth: boolean,
+  toggleAuth: () => void,
 }
 
-type AppState = {
-  count: number
-}
+const AuthContext = React.createContext<IContext>({
+  isAuth: false,
+  toggleAuth: () => {},
+});
 
-class App extends Component <{}, AppState> {
-  state = {
-    count: 0,
-  }
+class Login extends Component {
 
-  handleClick = ():void => {
-    this.setState(({ count }) => ({
-      count: ++count,
-    }))
-  }
+  static contextType = AuthContext;
 
   render() {
+    const { toggleAuth, isAuth } = this.context;
+
     return (
-      <div onClick={this.handleClick}>
-        <p>Clicks: {this.state.count}</p>
-        <span>Text</span>
-        <MyPortal>
-          <div>TEST PORTAL</div>
-          <button>Click</button>
-        </MyPortal>
-      </div>
+      <button onClick={toggleAuth}>
+        {!isAuth ? 'Login' : 'Logout'}
+      </button>
     );
   }
 }
+
+// Inner component (old variant with Consumer)
+const Profile = () => (
+  <AuthContext.Consumer>
+    {({ isAuth }) => (
+      <h1>{!isAuth ? 'Please log in' : 'You are logged in'}</h1>
+    )}
+  </AuthContext.Consumer>
+);
+
+// Root component
+class Context extends Component<{}, {isAuth: boolean}> {
+  readonly state = {
+    isAuth: false,
+  };
+
+  toggleAuth = () => {
+    this.setState(({ isAuth }) => ({
+      isAuth: !isAuth
+    }));
+  };
+
+  render() {
+    const { isAuth } = this.state;
+    const context: IContext = { isAuth, toggleAuth: this.toggleAuth };
+
+    return (
+      <AuthContext.Provider value={context}>
+        <Login />
+        <Profile />
+      </AuthContext.Provider>
+    );
+  }
+}
+
+
+const App = () => <Context />;
 
 export default App;
